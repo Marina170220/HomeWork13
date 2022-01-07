@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_from_directory
+from flask import Flask, request, render_template, send_from_directory, abort
 from functions import *
 
 POST_PATH = "posts.json"
@@ -15,7 +15,11 @@ def page_index():
 
 @app.route("/tag")
 def page_tag():
-    pass
+    tag = request.args.get('tag')
+    if tag:
+        posts = get_posts_by_tag(read_json(POST_PATH), tag)
+        return render_template('post_by_tag.html', posts=posts, tag=tag)
+    return abort(400, "Вы не выбрали ни одного тега :(")
 
 
 @app.route("/post", methods=["GET", "POST"])
