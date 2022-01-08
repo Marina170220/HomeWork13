@@ -1,8 +1,10 @@
-from flask import Flask, request, render_template, send_from_directory, abort
+from flask import Flask, request, render_template, send_from_directory, abort, url_for
 from functions import *
+import os
 
 POST_PATH = "posts.json"
 UPLOAD_FOLDER = "uploads/images"
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
 
@@ -24,13 +26,23 @@ def page_tag():
 
 @app.route("/post", methods=["GET", "POST"])
 def page_post_create():
-    pass
+    if request.method == "GET":
+        return render_template('post_form.html')
+    content = request.form.get('content')
+    picture = request.files.get('picture')
+    if not content or not picture:
+        abort(400, "Ошибка загрузки")
+    post = {'pic': url_for('static_dir', path=picture.filename),
+            'content': content
+            }
+    picture.save(os.path.join(BASE_DIR, UPLOAD_FOLDER, f'{picture.filename}'))
+    add_new_post(POST_PATH, post)
+    return render_template('post_uploaded.html', post=post)
 
 
 @app.route("/uploads/<path:path>")
 def static_dir(path):
-    return send_from_directory("uploads", path)
+    return send_from_directory(UPLOAD_FOLDER, path)
 
 
 app.run(debug=True)
-
